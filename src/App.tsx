@@ -26,38 +26,40 @@ const ASSAY_MAPPINGS: AssayMapping[] = [
   {
     assayName: 'SLM',
     testNamePatterns: [
-      'Salmonella',
-      'Sal-PCR GeneUp-375g v.3',
-      'Sal-PCR GeneUp-FP v.3'
+      'Sal-PCR GeneUp-125g',
+      'Sal-PCR GeneUp-325g',
+      'Sal-PCR GeneUp-375g',
+      'Sal-PCR GeneUp-FP'
     ]
   },
   {
     assayName: 'ECO',
     testNamePatterns: [
-      'EC0157',
-      'ECO157'
+      'EC0157-PCR GeneUP-25g',
+      'EC0157-PCR GeneUP-325g',
+      'EC0157-PCR GeneUP-375g',
     ]
   },
   {
     assayName: 'EH1',
     testNamePatterns: [
-      'EHEC',
-      'STEC'
+      'EHEC(STEC)-GeneUP-125g',
+      'EHEC(STEC)-GeneUP-25g',
+      'EHEC(STEC)-GeneUP-375g',
     ]
   },
   {
     assayName: 'LIS',
     testNamePatterns: [
-      'LIS-PCR GeneUp-ENV(BM) v.1',
-      'LIS-PCR GeneUp-FP v.3',
-      'Listeria'
+      'LIS-PCR GeneUp-125g',
+      'LIS-PCR GeneUp-FP',
     ]
   },
   {
     assayName: 'LMO',
     testNamePatterns: [
-      'Listeria monocytogenes',
-      'LM-PCR GeneUp-FP v.3'
+      'LM-PCR GeneUp-125g',
+      'LM-PCR GeneUp-FP'
     ]
   }
 ]
@@ -68,9 +70,16 @@ function App() {
   const [processedData, setProcessedData] = useState<Record<string, ProcessedSample[]>>({})
 
   const extractAssayFromTestName = (testName: string): string | null => {
+    // Normalize the test name for better matching
+    const normalizedTestName = testName.toLowerCase().replace(/\s+/g, ' ').trim()
+    
     for (const mapping of ASSAY_MAPPINGS) {
       for (const pattern of mapping.testNamePatterns) {
-        if (testName.includes(pattern)) {
+        // Normalize the pattern as well
+        const normalizedPattern = pattern.toLowerCase().replace(/\s+/g, ' ').trim()
+        
+        // Check if the test name contains the pattern
+        if (normalizedTestName.includes(normalizedPattern)) {
           return mapping.assayName
         }
       }
