@@ -17,26 +17,65 @@ interface ProcessedSample {
   assay: string
 }
 
-const ASSAY_MAPPING: Record<string, string> = {
-  'SLM': 'Salmonella PCR',
-  'ECO': 'ECO157 PCR',
-  'EH1': 'STEC PCR',
-  'LIS': 'Listeria PCR',
-  'LMO': 'Listeria monocytogenes PCR'
+interface AssayMapping {
+  assayName: string
+  testNamePatterns: string[]
 }
+
+const ASSAY_MAPPINGS: AssayMapping[] = [
+  {
+    assayName: 'SLM',
+    testNamePatterns: [
+      'Salmonella',
+      'Sal-PCR GeneUp-375g v.3',
+      'Sal-PCR GeneUp-FP v.3'
+    ]
+  },
+  {
+    assayName: 'ECO',
+    testNamePatterns: [
+      'EC0157',
+      'ECO157'
+    ]
+  },
+  {
+    assayName: 'EH1',
+    testNamePatterns: [
+      'EHEC',
+      'STEC'
+    ]
+  },
+  {
+    assayName: 'LIS',
+    testNamePatterns: [
+      'LIS-PCR GeneUp-ENV(BM) v.1',
+      'LIS-PCR GeneUp-FP v.3',
+      'Listeria'
+    ]
+  },
+  {
+    assayName: 'LMO',
+    testNamePatterns: [
+      'Listeria monocytogenes',
+      'LM-PCR GeneUp-FP v.3'
+    ]
+  }
+]
 
 function App() {
   const [files, setFiles] = useState<File[]>([])
   const [processing, setProcessing] = useState(false)
   const [processedData, setProcessedData] = useState<Record<string, ProcessedSample[]>>({})
 
-  const extractAssayFromTestName = (testName: string): string => {
-    if (testName.includes('EC0157') || testName.includes('ECO157')) return 'ECO'
-    if (testName.includes('EHEC') || testName.includes('STEC')) return 'EH1'
-    if (testName.includes('Salmonella')) return 'SLM'
-    if (testName.includes('Listeria monocytogenes')) return 'LMO'
-    if (testName.includes('Listeria')) return 'LIS'
-    return 'UNKNOWN'
+  const extractAssayFromTestName = (testName: string): string | null => {
+    for (const mapping of ASSAY_MAPPINGS) {
+      for (const pattern of mapping.testNamePatterns) {
+        if (testName.includes(pattern)) {
+          return mapping.assayName
+        }
+      }
+    }
+    return null
   }
 
   const processExcelFile = useCallback(async (file: File): Promise<Record<string, ProcessedSample[]>> => {
@@ -55,8 +94,7 @@ function App() {
           const testName = row['Test Name']
 
           if (sampleNum && testName) {
-            const assayCode = extractAssayFromTestName(testName)
-            const assayName = ASSAY_MAPPING[assayCode]
+            const assayName = extractAssayFromTestName(testName)
 
             // Only process samples with known assay mappings
             if (assayName) {
@@ -71,7 +109,6 @@ function App() {
             }
           }
         })
-
         resolve(groupedByAssay)
       }
       reader.readAsArrayBuffer(file)
